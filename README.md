@@ -115,7 +115,7 @@ Source: [Microsoft Tech Community – Prepare for Windows Update certificate rot
 
 (2): requires ```brew install cdrtools```
 
-(3): requires the .NET 10 runtime and the bundled ```libwim.so``` (wimlib). `libfuse2` is **not** needed in this fork.
+(3): the published binaries are self-contained single-file executables, so the .NET runtime is **not** required. The bundled ```libwim.so``` (wimlib) is used to build the ISO. `libfuse2` is **not** needed in this fork.
 
 ## Usage
 

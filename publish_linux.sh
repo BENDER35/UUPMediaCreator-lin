@@ -36,7 +36,7 @@ publish_project() {
     dotnet publish "${SCRIPT_DIR}/${project}" \
         --configuration Release \
         --runtime "${RID}" \
-        --self-contained false \
+        -p:SelfContained=true \
         -p:PublishSingleFile=true \
         -p:PublishTrimmed=false \
         --output "${OUT_DIR}"

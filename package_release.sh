@@ -10,7 +10,8 @@
 #   README.md, README.es.md
 #   docs/             TECHNICAL_GUIDE.md, GUIA_TECNICA.md
 #
-# The binaries are framework-dependent (they need the .NET 10 runtime).
+# The binaries are self-contained single-file executables: they do NOT require
+# the .NET runtime to be installed on the target machine.
 #
 # Usage:
 #   ./package_release.sh [version]
@@ -40,7 +41,7 @@ for rid in "${RIDS[@]}"; do
         dotnet publish "${SCRIPT_DIR}/${proj}" \
             --configuration Release \
             --runtime "${rid}" \
-            --self-contained false \
+            -p:SelfContained=true \
             -p:PublishSingleFile=true \
             -p:PublishTrimmed=false \
             --output "${out}"
