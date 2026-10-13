@@ -69,7 +69,7 @@ It publishes both `UUPDownload` and `UUPMediaConverter` as single-file executabl
 
 ### Publishing for Windows
 
-On Windows, a `.cmd` helper script is provided per architecture. They require the **.NET 10 SDK** / MSBuild:
+On Windows, a `.cmd` helper script is provided per architecture. They require only the **.NET 10 SDK** (no Visual Studio); each one is a thin wrapper around the generic `publish.cmd` helper:
 
 | Script | Architecture | Typical target |
 |--------|--------------|----------------|
@@ -82,6 +82,8 @@ Each script produces self-contained single-file executables:
 
 - `publish_win_x64.cmd`, `publish_win_x86.cmd` and `publish_win_arm64.cmd` → `publish\artifacts\win-<arch>\CLI`
 - `publish_win_legacy.cmd` → `publish\artifacts\win-legacy-x86\CLI` and `publish\artifacts\win-legacy-x64\CLI`
+
+For any other runtime, call the helper directly: `publish.cmd <rid> [tfm]` — for example `publish.cmd linux-x64`, `publish.cmd osx-arm64` or `publish.cmd win-x64 net6.0`.
 
 #### Legacy build (old Windows)
 

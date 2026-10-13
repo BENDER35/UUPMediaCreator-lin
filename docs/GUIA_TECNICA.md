@@ -250,7 +250,7 @@ El `.sln` completo incluye proyectos solo Windows (`UUPSort`, `Playground`, `Win
 
 ### 6.1 Scripts de publicación para Windows
 
-En Windows, un script `.cmd` por arquitectura (requiere el SDK de .NET 10 / MSBuild):
+En Windows, un script `.cmd` por arquitectura. Todos son envoltorios finos sobre el ayudante genérico `publish.cmd <rid> [tfm]` y solo necesitan el SDK de .NET 10 (sin Visual Studio / MSBuild de escritorio):
 
 | Script | Arquitectura | Salida |
 |--------|--------------|--------|
@@ -264,11 +264,19 @@ El framework de destino se selecciona mediante la propiedad `UUPMediaTargetFrame
 El script **heredado** la sobrescribe con **`net6.0`**, el último runtime de .NET que funciona en **Windows 7 SP1 / 8 / 8.1** (el `net10.0` predeterminado requiere Windows 10 1607+). También pasa `/p:LangVersion=latest` porque algunos archivos usan características del lenguaje más recientes que el valor predeterminado de C# 10 en `net6.0`. Los binarios publicados son ejecutables de archivo único autocontenidos, por lo que no se necesita ningún runtime de .NET en el destino:
 
 ```cmd
-msbuild /m /t:restore,cli\uupmediaconverter:publish,cli\uupdownload:publish ^
-  /p:Platform=x64 /p:RuntimeIdentifier=win-x64 ^
+:: equivalente a publish_win_legacy.cmd
+publish.cmd win-x86 net6.0
+publish.cmd win-x64 net6.0
+```
+
+Internamente cada proyecto se publica con `dotnet msbuild` (no hace falta el MSBuild de escritorio):
+
+```cmd
+dotnet msbuild "src\Applications\UUPDownload\UUPDownload.csproj" "/t:restore;publish" ^
+  /p:Configuration=Release /p:RuntimeIdentifier=win-x64 ^
   /p:UUPMediaTargetFramework=net6.0 /p:LangVersion=latest ^
-  /p:PublishDir=%CD%\publish\artifacts\win-legacy-x64\CLI ^
-  /p:PublishSingleFile=true /p:PublishTrimmed=false /p:Configuration=Release UUPMediaCreator.sln
+  /p:SelfContained=true /p:PublishSingleFile=true /p:PublishTrimmed=false ^
+  "/p:PublishDir=publish\artifacts\win-legacy-x64\CLI\"
 ```
 
 Fueron necesarios pequeños ajustes de compatibilidad entre frameworks para que el código compile con `net10.0` y `net6.0`; son inocuos para la compilación predeterminada:
@@ -278,6 +286,21 @@ Fueron necesarios pequeños ajustes de compatibilidad entre frameworks para que 
 - `[GeneratedRegex]` está envuelto en `#if NET7_0_OR_GREATER`, con un `Regex` compilado como alternativa para `net6.0` (`DownloadHelpers.cs`).
 
 > **Nota:** .NET 6 dejó de recibir soporte en noviembre de 2024. La variante heredada existe únicamente para ejecutar la herramienta en sistemas operativos que .NET 10 ya no admite (Windows 7 SP1 / 8 / 8.1). Además, Windows 7 SP1 requiere el Universal C Runtime (KB2999226), el soporte de firma de código SHA-2 (KB4474419) y KB2533623.
+
+### 6.2 Empaquetado de la release
+
+`package_release.sh` compila todos los runtimes y escribe los archivos de la release en `publish/`:
+
+```bash
+./package_release.sh            # versión leída del AssemblyInfo.cs de UUPDownload
+./package_release.sh 3.2.4.0    # versión explícita
+```
+
+- `UUPMediaCreator-lin-v<version>.zip` — compilaciones .NET 10 para `linux-x64`, `linux-arm64`, `win-x64`, `win-x86`, `win-arm64`, `osx-x64`, `osx-arm64`
+- `UUPMediaCreator-lin-v<version>-legacy.zip` — compilaciones .NET 6 para Windows 7 SP1+ (`win-legacy-x86`, `win-legacy-x64`)
+- `checksums.txt` — SHA-256 de ambos archivos
+
+Cada archivo contiene `bin/<rid>/` con los dos ejecutables, además de los README y `docs/`.
 
 ---
 

@@ -250,7 +250,7 @@ The whole `.sln` includes Windows-only projects (`UUPSort`, `Playground`, `Windo
 
 ### 6.1 Windows publish scripts
 
-On Windows, one `.cmd` per architecture (requires the .NET 10 SDK / MSBuild):
+On Windows, one `.cmd` per architecture. All of them are thin wrappers over the generic `publish.cmd <rid> [tfm]` helper and require only the .NET 10 SDK (no Visual Studio / desktop MSBuild):
 
 | Script | Architecture | Output |
 |--------|--------------|--------|
@@ -264,11 +264,19 @@ The target framework is selected through the `UUPMediaTargetFramework` property,
 The **legacy** script overrides it to **`net6.0`**, the last .NET runtime that runs on **Windows 7 SP1 / 8 / 8.1** (the default `net10.0` requires Windows 10 1607+). It also passes `/p:LangVersion=latest` because a few files use language features newer than the C# 10 default of `net6.0`. The published binaries are self-contained single-file executables, so no .NET runtime is needed on the target:
 
 ```cmd
-msbuild /m /t:restore,cli\uupmediaconverter:publish,cli\uupdownload:publish ^
-  /p:Platform=x64 /p:RuntimeIdentifier=win-x64 ^
+:: equivalent to publish_win_legacy.cmd
+publish.cmd win-x86 net6.0
+publish.cmd win-x64 net6.0
+```
+
+Internally each project is published with `dotnet msbuild` (no desktop MSBuild required):
+
+```cmd
+dotnet msbuild "src\Applications\UUPDownload\UUPDownload.csproj" "/t:restore;publish" ^
+  /p:Configuration=Release /p:RuntimeIdentifier=win-x64 ^
   /p:UUPMediaTargetFramework=net6.0 /p:LangVersion=latest ^
-  /p:PublishDir=%CD%\publish\artifacts\win-legacy-x64\CLI ^
-  /p:PublishSingleFile=true /p:PublishTrimmed=false /p:Configuration=Release UUPMediaCreator.sln
+  /p:SelfContained=true /p:PublishSingleFile=true /p:PublishTrimmed=false ^
+  "/p:PublishDir=publish\artifacts\win-legacy-x64\CLI\"
 ```
 
 Cross-target compatibility shims were needed so the code compiles for both `net10.0` and `net6.0`; they are no-ops for the default build:
@@ -278,6 +286,21 @@ Cross-target compatibility shims were needed so the code compiles for both `net1
 - `[GeneratedRegex]` is wrapped in `#if NET7_0_OR_GREATER`, with a compiled `Regex` fallback for `net6.0` (`DownloadHelpers.cs`).
 
 > **Note:** .NET 6 reached end of support in November 2024. The legacy flavour exists only to run on operating systems that .NET 10 no longer supports (Windows 7 SP1 / 8 / 8.1). Windows 7 SP1 additionally requires the Universal C Runtime (KB2999226), SHA-2 code signing support (KB4474419) and KB2533623.
+
+### 6.2 Release packaging
+
+`package_release.sh` builds every runtime and writes the release archives to `publish/`:
+
+```bash
+./package_release.sh            # version read from UUPDownload's AssemblyInfo.cs
+./package_release.sh 3.2.4.0    # explicit version
+```
+
+- `UUPMediaCreator-lin-v<version>.zip` — .NET 10 builds for `linux-x64`, `linux-arm64`, `win-x64`, `win-x86`, `win-arm64`, `osx-x64`, `osx-arm64`
+- `UUPMediaCreator-lin-v<version>-legacy.zip` — .NET 6 builds for Windows 7 SP1+ (`win-legacy-x86`, `win-legacy-x64`)
+- `checksums.txt` — SHA-256 of both archives
+
+Each archive contains `bin/<rid>/` with the two executables plus the READMEs and `docs/`.
 
 ---
 
