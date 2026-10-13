@@ -4,10 +4,12 @@
   <a href="./src">Source Code</a> |
   <a href="./docs">Documentation</a> |
   <a href="./thirdparty">Third party libraries</a> |
-  <a href="https://github.com/gus33000/UUPMediaCreator/releases">Downloads</a>
+  <a href="https://github.com/BENDER35/UUPMediaCreator-lin/releases">Downloads</a>
   <br><br>
-  <img src="https://github.com/gus33000/UUPMediaCreator/actions/workflows/ci.yml/badge.svg">
 </p>
+
+> 🌐 **Languages / Idiomas:** English (this file) · [Español](./README.es.md)
+> 📖 **Technical guide / Guía técnica:** [English](./docs/TECHNICAL_GUIDE.md) · [Español](./docs/GUIA_TECNICA.md)
 
 ## Readme
 
@@ -18,10 +20,75 @@ Right now the tooling includes:
 - UUPDownload: Allows you to scan, fetch and download updates from UUP (Windows Desktop, Windows 10X, Windows Holographic, Windows Server, Windows Mobile, Windows IoT etc...)
 - UUPMediaConverter: Allows you to convert a downloaded UUP update for Windows Desktop into an usable ISO image to use in last decade DVD reader or simply mounted.
 
-## Credits and Acknowledgements
+> ℹ️ **About this fork:** this repository is a Linux-focused fork. Both command line tools are built and verified to run **on Linux** (x64/arm64), Windows and macOS, with a special focus on being able to download **old Windows builds** (Windows 7/8.1/10 era). See the [Dependencies](#dependencies) and [Windows support lifecycle](#windows-10-support-lifecycle) sections.
 
-- Rafael Rivera (@WithinRafael - https://github.com/riverar) for being a strong supporter of this project and a few contributions
-- Lucas (@thebookisclosed - https://github.com/thebookisclosed) for a lot of important contributions to this project including the AppX code for Nickel and beyond
+## Dependencies
+
+The tools are .NET applications, so a .NET runtime is required. During development the .NET **10** SDK is used, and the binaries are published for the platforms below. When running from source (or a framework-dependent build) install:
+
+| Platform | Required |
+|----------|----------|
+| **Windows** | .NET 10 Runtime (or SDK). For base edition ISO creation **no administration privileges are needed**. |
+| **Linux** | .NET 10 Runtime (or SDK) + `genisoimage` (provides `mkisofs`) for ISO creation + `libwim` (wimlib) — the Linux-native `libwim.so` is **bundled** in the published binaries. |
+
+Install commands:
+
+```bash
+# Ubuntu / Debian
+sudo apt-get install genisoimage
+sudo apt-get install dotnet-runtime-10.0   # or the .NET 10 SDK
+```
+
+```bash
+# Arch Linux
+sudo pacman -S genisoimage dotnet-runtime
+```
+
+```bash
+# Fedora
+sudo dnf install genisoimage dotnet-runtime-10.0
+```
+
+```bash
+# macOS
+brew install cdrtools   # provides mkisofs/genisoimage
+```
+
+> **Note about `libfuse2`:** older versions of this project pointed to `libfuse2` for Linux VHD mounting. The current fork does **not** contain any FUSE/VHD mounting code for Linux (virtual disk mounting is Windows-only), so `libfuse2` is **not required** on Linux.
+
+### Publishing for Linux
+
+A convenience script is provided:
+
+```bash
+./publish_linux.sh            # linux-x64
+./publish_linux.sh arm64      # linux-arm64
+```
+
+It publishes both `UUPDownload` and `UUPMediaConverter` as single-file executables into `publish/artifacts/linux-<arch>/CLI`.
+
+## Windows 10 support lifecycle
+
+This tool can download and build media for **both Windows 10 and Windows 11**, including very old Windows 10 builds (1709, 1803, 1809, 1903…). Because of that, you should be aware of the current support status of the operating systems you are going to deploy:
+
+| Product | Regular (ordinary) end of support | Extended Security Updates (ESU) end |
+|---------|-----------------------------------|-------------------------------------|
+| Windows 10 (Home / Pro / all retail editions) | **October 14, 2025** | **October 12, 2027** (consumer ESU, including enrollment until that date) · up to **October 2028** for commercial ESU (annual, paid) |
+| Windows 8.1 | January 10, 2023 | January 10, 2026 (ESU ended) |
+| Windows 7 | January 14, 2020 | January 10, 2023 (ESU ended) |
+| Windows Server 2012 / 2012 R2 | October 10, 2023 | October 13, 2026 (ESU ended) |
+
+Sources: [Microsoft – End of support for Windows](https://www.microsoft.com/en-us/windows/end-of-support), [Microsoft – Windows 10 Consumer ESU](https://www.microsoft.com/en-us/windows/extended-security-updates).
+
+## ⚠️ Windows Update certificate rotation (2027) — read before deploying
+
+Microsoft is **rotating the root certificates** used to establish trusted connections to Windows Update. Some of these certificates expire on **May 17, 2027** and **June 19, 2027**.
+
+- Devices running supported Windows versions that keep receiving monthly updates will get the new certificates automatically and are **not** affected.
+- Devices running **Windows 7, Windows 8.1 and Windows 10 without ESU** (or any already-out-of-support build) that **cannot receive the updated root certificates** will **stop connecting to Windows Update** and will no longer receive updates at all.
+- If you are deploying or maintaining old Windows media with this tool, plan accordingly: either enroll the machine in ESU (Windows 8/10), migrate to a supported Windows version, or apply the manual trusted-root certificate update **before the May/June 2027 deadlines**.
+
+Source: [Microsoft Tech Community – Prepare for Windows Update certificate rotation in 2027](https://techcommunity.microsoft.com/blog/windows-itpro-blog/prepare-for-windows-update-certificate-rotation-in-2027/4562463)
 
 ## Supported features by OS
 
@@ -35,7 +102,7 @@ Right now the tooling includes:
 | Converting Desktop UUP files to an ISO for one base edition (UUPMediaConverter)          | ✅       | ✅       | ✅       |
 | Does not require administrative privileges for base edition ISO images                   | ✅       | ✅       | ✅       |
 | CLI available                                                                            | ✅       | ✅       | ✅       |
-| ARM64 Support (aka works on @sinclairinat0r device (TM))                                 | ✅       | ✅       | ✅       |                                
+| ARM64 Support (aka works on @sinclairinat0r device (TM))                                 | ✅       | ✅       | ✅       |
 | Converting Desktop UUP files to an ISO for all possible editions (UUPMediaConverter)     | ✅       | ❌       | ❌       |
 | ISO Preinstallation Environment close to original (UUPMediaConverter)                    | ✅       | ❌       | ❌       |
 | ISO built by CDImage Mastering Utility with UDF and boot sector (UUPMediaConverter)      | ✅       | ❌       | ❌       |
@@ -48,11 +115,11 @@ Right now the tooling includes:
 
 (2): requires ```brew install cdrtools```
 
-(3): requires ```apt-get install libfuse2```
+(3): requires the .NET 10 runtime and the bundled ```libwim.so``` (wimlib). `libfuse2` is **not** needed in this fork.
 
 ## Usage
 
-UUPDownload might be a little too complicated to use for some people. For reference purposes, here's the current set of parameters you can use as of ```2021-05-18```:
+UUPDownload might be a little too complicated to use for some people. For reference purposes, here's the current set of parameters you can use:
 
 | Channel                               | Command |
 |---------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -73,6 +140,8 @@ UUPDownload might be a little too complicated to use for some people. For refere
 | Dev (Holographic)                     | -s Holographic -v 10.0.19043.1 -r External -b Dev -c vb_release -t [your architecture] |
 | Dev (Team)                            | -s PPIPro -v 10.0.19043.1 -r External -b Dev -c vb_release -t [your architecture] |
 | Canary (Desktop)                      | -s Professional -v 10.0.22621.1 -r External -b CanaryChannel -c ni_release -t [your architecture] |
+
+> **Downloading old Windows 10 builds:** use the matching branch and `-y` to pin the exact version, e.g. Windows 10 1809 (RS5): `-s Professional -v 10.0.17763.1217 -r Retail -b Retail -c rs5_release -y -e Professional -l en-US`. You can discover which builds are still being served with the `get-builds` verb. Older builds may or may not be offered by Microsoft servers anymore (builds that Microsoft has expired/retired will return no payloads).
 
 **TIP 1:** You can append ```-e [Edition to download]``` to get the files needed only for a specific edition
 
