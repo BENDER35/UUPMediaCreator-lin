@@ -115,6 +115,7 @@ Optionally, an Insider (MSA) authorization token can be obtained with `-m`/`-p` 
 "Retail (1809 - RS5)"[0]="10.0.17763.1217 (rs5_release_svc_prod1.200505-1609)"
 "Retail (1903 - 19H1)"[0]="10.0.18362.836 (19h1_release_svc_prod1.200505-1604)"
 "Retail (Windows 10 - VB)"[0]="10.0.19045.6456 (vb_release_svc_prod1.251010-0328)"
+"Retail (Windows 10 ESU)"[0]="10.0.19045.7727 (vb_release_svc_im.260912-0526)"
 "Retail (Windows 11 - GE)"[0]="10.0.26200.9457 (ge_release_svc_im.260912-0409)"
 "Beta (Windows 11)"[0]="10.0.26220.9606 (ge_release_svc_betaflt_prod1.260929-1929)"
 "Release Preview (Windows 11)"[0]="10.0.26100.9550 (ge_release_svc_prod3.260919-2247)"
@@ -129,6 +130,7 @@ Notes:
 - Windows 11 **Beta** and **Release Preview** now live on the **GE (Germanium)** branch → use `-c ge_release`. **Dev**/**Canary** use `-c rs_prerelease`. The legacy `ni_release` branch (21H2/22H2/23H2) no longer returns content on those channels, so `-b Beta -c ni_release -y` yields *"No updates found"*.
 - `get-builds` queries each ring in sequence; the servers occasionally answer with an empty set when many rings are queried in quick succession, so the tool waits and **retries once** before reporting nothing (`RingCheck.cs`).
 - **Windows 10 Beta** is still served: the Beta channel answers with the newest Windows 10 22H2 build (`10.0.19045.6396`, `vb_release_svc_prod3`). Query it with `-v 10.0.19045.1 -b Beta -c vb_release` and **no** `-y`, e.g. `-s Professional -v 10.0.19045.1 -r External -b Beta -c vb_release -t amd64`. Windows 10 **Dev** now returns Windows 11 builds instead (verified: `10.0.26340.9616`).
+- **Windows 10 ESU** (`-u` / `--esu`, `CTAC.IsEsu`): Windows 10 22H2 reached end of support on 2025-10-14 and the post-EOS monthly updates are only offered to ESU-enrolled devices. The flag appends the ESU eligibility/commercial-enrollment attributes to `DeviceAttributes` (`Win10ConsumerESUStatus=3`, `Win10ConsumerESUAY=10`, `Win10CommercialAzureESUEligible=1`, `Win10CommercialKeybasedESUEligible=2`, `Win10CommercialW365ESUEligible=1`), which is what UUP dump does. The servers then return the ESU build (`10.0.19045.7727`, `vb_release_svc_im.260912-0526`) for **x86**, **amd64** and **arm64**; without `-u` only the last regular 22H2 build (`10.0.19045.6456`) is offered. Example: `-s Professional -v 10.0.19045.1 -r Retail -b Retail -c vb_release -u -e Professional -l en-US`.
 
 ### 3.4 Downloading a file set
 
@@ -197,6 +199,7 @@ UUPDownload request-download (default)
   -l, --language                  language filter (with -e)
   -z, --releasetype               (default Production)
   -n, --contenttype               (default Mainline)
+  -u, --esu                       report as Windows 10 ESU-enrolled (Windows 10 22H2 ESU builds)
   -m, --mail / -p, --password     Insider (MSA) credentials (optional)
 
 UUPDownload replay-download
@@ -269,6 +272,7 @@ Verified on **Linux (Ubuntu 26.04, x86_64, .NET SDK 10.0.112)**:
 | `UUPDownload get-builds -s Professional -t amd64` — reports builds from **Windows 10 1709 (RS3)** up to current Dev/Canary | ✅ |
 | `UUPDownload request-download` of **Windows 10 1809 (RS5)** (`rs5_release`, `-y`, `-e Professional -l en-US`) — 78 payloads, multi-GB set downloaded, hashes verified | ✅ |
 | `UUPMediaConverter desktop-convert` → ISO via wimlib + mkisofs | ✅ Windows 10 1809 (RS5) → 4,2 GB bootable ISO (`CPRA_X64FRE_EN-US_DV9`, El-Torito no-emulation, 945 files / 84 dirs) |
+| `request-download ... -c vb_release -u` (**Windows 10 ESU**, `-v 10.0.19045.1`, `-e Professional -l en-US`) — server returns the ESU build `10.0.19045.7727 (vb_release_svc_im.260912-0526)` for x86, amd64 and arm64; payloads download and verify (e.g. KB5122887) | ✅ |
 
 Note: a very old build can stop being served by Microsoft at any time (Microsoft expires/retires WU content); the tool surfaces this as no available payloads, not as an error in the tool.
 

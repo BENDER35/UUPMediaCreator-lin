@@ -115,6 +115,7 @@ Opcionalmente se puede obtener un token de autorización Insider (MSA) con `-m`/
 "Retail (1809 - RS5)"[0]="10.0.17763.1217 (rs5_release_svc_prod1.200505-1609)"
 "Retail (1903 - 19H1)"[0]="10.0.18362.836 (19h1_release_svc_prod1.200505-1604)"
 "Retail (Windows 10 - VB)"[0]="10.0.19045.6456 (vb_release_svc_prod1.251010-0328)"
+"Retail (Windows 10 ESU)"[0]="10.0.19045.7727 (vb_release_svc_im.260912-0526)"
 "Retail (Windows 11 - GE)"[0]="10.0.26200.9457 (ge_release_svc_im.260912-0409)"
 "Beta (Windows 11)"[0]="10.0.26220.9606 (ge_release_svc_betaflt_prod1.260929-1929)"
 "Release Preview (Windows 11)"[0]="10.0.26100.9550 (ge_release_svc_prod3.260919-2247)"
@@ -129,6 +130,7 @@ Notas:
 - El **Beta** y el **Release Preview** de Windows 11 ahora están en la rama **GE (Germanium)** → usa `-c ge_release`. **Dev**/**Canary** usan `-c rs_prerelease`. La antigua rama `ni_release` (21H2/22H2/23H2) ya no devuelve contenido en esos canales, por lo que `-b Beta -c ni_release -y` da *"No updates found"*.
 - `get-builds` consulta cada anillo en secuencia; los servidores a veces responden con un conjunto vacío cuando se consultan muchos anillos muy seguidos, por lo que la herramienta espera y **reintenta una vez** antes de informar de que no hay nada (`RingCheck.cs`).
 - La **Beta de Windows 10** sigue sirviéndose: el canal Beta responde con la compilación más nueva de Windows 10 22H2 (`10.0.19045.6396`, `vb_release_svc_prod3`). Consúltala con `-v 10.0.19045.1 -b Beta -c vb_release` y **sin** `-y`, p. ej. `-s Professional -v 10.0.19045.1 -r External -b Beta -c vb_release -t amd64`. El canal **Dev** de Windows 10 ahora devuelve compilaciones de Windows 11 (verificado: `10.0.26340.9616`).
+- **Windows 10 ESU** (`-u` / `--esu`, `CTAC.IsEsu`): Windows 10 22H2 llegó al fin de soporte el 14-10-2025 y las actualizaciones mensuales posteriores solo se ofrecen a dispositivos inscritos en ESU. El flag añade los atributos de elegibilidad/inscripción comercial ESU a `DeviceAttributes` (`Win10ConsumerESUStatus=3`, `Win10ConsumerESUAY=10`, `Win10CommercialAzureESUEligible=1`, `Win10CommercialKeybasedESUEligible=2`, `Win10CommercialW365ESUEligible=1`), que es lo que hace UUP dump. Los servidores devuelven entonces la compilación ESU (`10.0.19045.7727`, `vb_release_svc_im.260912-0526`) para **x86**, **amd64** y **arm64**; sin `-u` solo se ofrece la última compilación 22H2 normal (`10.0.19045.6456`). Ejemplo: `-s Professional -v 10.0.19045.1 -r Retail -b Retail -c vb_release -u -e Professional -l en-US`.
 
 ### 3.4 Descargar un conjunto de archivos
 
@@ -197,6 +199,7 @@ UUPDownload request-download (predeterminado)
   -l, --language                  filtro de idioma (con -e)
   -z, --releasetype               (por defecto Production)
   -n, --contenttype               (por defecto Mainline)
+  -u, --esu                       reportar como Windows 10 inscrito en ESU (compilaciones ESU de Windows 10 22H2)
   -m, --mail / -p, --password     credenciales Insider (MSA) (opcional)
 
 UUPDownload replay-download
@@ -269,6 +272,7 @@ Verificado en **Linux (Ubuntu 26.04, x86_64, SDK de .NET 10.0.112)**:
 | `UUPDownload get-builds -s Professional -t amd64` — reporta compilaciones desde **Windows 10 1709 (RS3)** hasta Dev/Canary actuales | ✅ |
 | `UUPDownload request-download` de **Windows 10 1809 (RS5)** (`rs5_release`, `-y`, `-e Professional -l en-US`) — 78 cargas útiles, conjunto multi-GB descargado, hashes verificados | ✅ |
 | `UUPMediaConverter desktop-convert` → ISO vía wimlib + mkisofs | ✅ Windows 10 1809 (RS5) → ISO de arranque de 4,2 GB (`CPRA_X64FRE_EN-US_DV9`, El-Torito no-emulation, 945 archivos / 84 carpetas) |
+| `request-download ... -c vb_release -u` (**Windows 10 ESU**, `-v 10.0.19045.1`, `-e Professional -l en-US`) — el servidor devuelve la compilación ESU `10.0.19045.7727 (vb_release_svc_im.260912-0526)` para x86, amd64 y arm64; las cargas útiles se descargan y verifican (p. ej. KB5122887) | ✅ |
 
 Nota: una compilación muy antigua puede dejar de servirse por Microsoft en cualquier momento (Microsoft caduca/retira contenido de WU); la herramienta lo muestra como "no hay cargas útiles disponibles", no como un error de la herramienta.
 

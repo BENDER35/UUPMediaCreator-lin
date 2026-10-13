@@ -124,6 +124,7 @@ UUPDownload might be a little too complicated to use for some people. For refere
 | Channel                               | Command |
 |---------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Retail (Windows 10, Desktop)          | -s Professional -v 10.0.19043.1 -r Retail -b Retail -c vb_release -t [your architecture] |
+| Retail (Windows 10 ESU, Desktop)      | -s Professional -v 10.0.19045.1 -r Retail -b Retail -c vb_release -u -t [your architecture] |
 | Retail (Windows 11, Desktop)          | -s Professional -v 10.0.26100.1 -r Retail -b Retail -c ge_release -t [your architecture] |
 | Retail (IoT)                          | -s IoTUAP -v 10.0.17763.1 -r Retail -b Retail -c rs5_release -t [your architecture] |
 | Retail (Holographic)                  | -s Holographic -v 10.0.20346.1 -r Retail -b Retail -c fe_release -t [your architecture] |
@@ -145,6 +146,8 @@ UUPDownload might be a little too complicated to use for some people. For refere
 > **Windows 11 branches (2026):** Windows 11 now ships from the **GE (Germanium)** branch. Use `-c ge_release` for Windows 11 **Retail**, **Release Preview** and **Beta**; use `-c rs_prerelease` for **Dev** and **Canary**. The old `ni_release` branch (21H2/22H2/23H2) is no longer served by the Beta/Release Preview channels, so using it together with `-y` returns *"No updates found"*. This was verified against the live servers: Beta = `10.0.26220.9606 (ge_release_svc_betaflt_prod1)`, Dev = `10.0.26340.9616 (ge_prerelease_im)`, Canary = `10.0.28020.2207`.
 
 > **Windows 10 Beta:** Microsoft still serves the Windows 10 **Beta** channel — it answers with the newest Windows 10 22H2 build (`10.0.19045.6396`, `vb_release_svc_prod3.250923-1751`). Use `-s Professional -v 10.0.19045.1 -r External -b Beta -c vb_release -t [your architecture]` **without `-y`** to always fetch the latest available Beta build. Windows 10 **Dev** now returns Windows 11 builds instead.
+
+> **Windows 10 ESU (Extended Security Updates):** Windows 10 22H2 reached end of support on **2025-10-14**; the monthly updates published afterwards are only offered to devices enrolled in the ESU programme. Append `-u` (`--esu`) to `request-download` — or use the **`Retail (Windows 10 ESU)`** entry with `get-builds` — to report the device as ESU-enrolled. The servers then hand out the ESU build, e.g. `10.0.19045.7727 (vb_release_svc_im.260912-0526)`, for **x86**, **amd64** and **arm64**. Example: `-s Professional -v 10.0.19045.1 -r Retail -b Retail -c vb_release -u -e Professional -l en-US`. Without `-u` you only get the last regular 22H2 build (`10.0.19045.6456`).
 
 > **Reliability:** the Windows Update servers occasionally answer with an empty set when many requests are fired in quick succession. `UUPDownload` now waits and **retries once** before reporting *"No updates found"*, for both `get-builds` and `request-download`.
 

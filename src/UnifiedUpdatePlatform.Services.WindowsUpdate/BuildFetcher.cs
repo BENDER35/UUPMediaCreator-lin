@@ -360,6 +360,7 @@ namespace UnifiedUpdatePlatform.Services.WindowsUpdate
                 { new CTAC(osSkuId, "10.0.18362.836", machineType, "Retail", "", "CB", "19h1_release", "Production", true), "Retail (1903 - 19H1)" },
                 { new CTAC(osSkuId, "10.0.19041.200", machineType, "Retail", "", "CB", "vb_release", "Production", false, false), "Retail (Windows 10 - VB)" },
                 { new CTAC(osSkuId, "10.0.19041.84", machineType, "Retail", "", "CB", "vb_release", "Production", false), "Retail" },
+                { new CTAC(osSkuId, "10.0.19045.1", machineType, "Retail", "", "CB", "vb_release", "Production", false, IsEsu: true), "Retail (Windows 10 ESU)" },
                 { new CTAC(osSkuId, "10.0.22621.1", machineType, "Retail", "", "CB", "ni_release", "Production", false), "Retail (Windows 11 - NI)" },
                 { new CTAC(osSkuId, "10.0.26100.1", machineType, "Retail", "", "CB", "ge_release", "Production", false), "Retail (Windows 11 - GE)" },
                 { new CTAC(osSkuId, "10.0.26100.1", machineType, "External", "ReleasePreview", "CB", "ge_release", "Production", false, false), "Release Preview (Windows 11)" },

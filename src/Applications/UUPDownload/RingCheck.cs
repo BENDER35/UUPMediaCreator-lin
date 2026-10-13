@@ -45,6 +45,13 @@ namespace UUPDownload
                 { new CTAC(osSkuId, "10.0.19041.200", machineType, "Retail", "", "CB", "vb_release", "Production", false, false), "Retail (Windows 10 - VB)" },
                 { new CTAC(osSkuId, "10.0.19041.84", machineType, "Retail", "", "CB", "vb_release", "Production", false), "Retail" },
 
+                // --- Windows 10 Extended Security Updates (ESU) ---
+                // Windows 10 22H2 is past end of support, so its monthly updates are
+                // only offered to ESU-enrolled devices. This CTAC reports ESU
+                // enrollment, making the servers hand out the ESU build
+                // (for example 10.0.19045.7727).
+                { new CTAC(osSkuId, "10.0.19045.1", machineType, "Retail", "", "CB", "vb_release", "Production", false, IsEsu: true), "Retail (Windows 10 ESU)" },
+
                 // --- Windows 11: retail branches (NI = 21H2/22H2/23H2, GE = 24H2/25H2) ---
                 { new CTAC(osSkuId, "10.0.22621.1", machineType, "Retail", "", "CB", "ni_release", "Production", false), "Retail (Windows 11 - NI)" },
                 { new CTAC(osSkuId, "10.0.26100.1", machineType, "Retail", "", "CB", "ge_release", "Production", false), "Retail (Windows 11 - GE)" },

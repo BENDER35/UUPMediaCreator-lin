@@ -53,7 +53,8 @@ namespace UUPDownload.DownloadRequest
                 opts.Password,
                 opts.OutputFolder,
                 opts.Language,
-                opts.Edition).Wait();
+                opts.Edition,
+                opts.Esu).Wait();
         }
 
         internal static void ParseReplayOptions(DownloadReplayOptions opts)
@@ -177,11 +178,12 @@ namespace UUPDownload.DownloadRequest
                     string Password,
                     string OutputFolder,
                     string Language,
-                    string Edition)
+                    string Edition,
+                    bool Esu)
         {
             Logging.Log("Checking for updates...");
 
-            CTAC ctac = new(ReportingSku, ReportingVersion, MachineType, FlightRing, FlightingBranchName, BranchReadinessLevel, CurrentBranch, ReleaseType, SyncCurrentVersionOnly, ContentType: ContentType);
+            CTAC ctac = new(ReportingSku, ReportingVersion, MachineType, FlightRing, FlightingBranchName, BranchReadinessLevel, CurrentBranch, ReleaseType, SyncCurrentVersionOnly, ContentType: ContentType, IsEsu: Esu);
             string token = string.Empty;
             if (!string.IsNullOrEmpty(Mail) && !string.IsNullOrEmpty(Password))
             {
