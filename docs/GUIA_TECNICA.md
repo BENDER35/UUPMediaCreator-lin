@@ -246,7 +246,7 @@ dotnet build src/Applications/UUPMediaConverter/UUPMediaConverter.csproj -c Rele
 ./publish_linux.sh arm64      # linux-arm64
 ```
 
-El `.sln` completo incluye proyectos solo Windows (`UUPSort`, `Playground`, `Windows.Internal.Flighting`) que apuntan a `net10.0-windows`; compila los dos proyectos CLI por separado (como arriba) o mediante la matriz del CI, que publica los CLIs para los RIDs `win-*`, `linux-*` y `osx-*`.
+El `.sln` completo incluye proyectos solo Windows (`UUPSort`, `Playground`, `Windows.Internal.Flighting`) que apuntan a `net10.0-windows`; compila los dos proyectos CLI por separado (como arriba) o mediante la matriz del CI (`.github/workflows/ci.yml`, SDK de .NET 10), que publica los CLIs para todos los RIDs `win-*`/`linux-*`/`osx-*` y además compila las variantes heredadas (`net6.0`) `win-legacy-x86`/`win-legacy-x64`.
 
 ### 6.1 Scripts de publicación para Windows
 
