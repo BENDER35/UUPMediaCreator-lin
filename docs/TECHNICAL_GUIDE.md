@@ -75,7 +75,7 @@ The downloader never asks Microsoft "give me Windows build X". Instead it impers
 - `-v / --reporting-version` — the OS version to claim (`10.0.x.y`).
 - `-t / --machine-type` — the architecture (`MachineType` enum: `x86`, `amd64`, `arm64`, …).
 - `-r / --flight-ring` — servicing ring (`Retail`, `External`, `Internal`, …).
-- `-c / --current-branch` — release branch (`vb_release`, `ni_release`, `rs5_release`, …).
+- `-c / --current-branch` — release branch (`vb_release`, `ge_release`, `ni_release`, `rs_prerelease`, `rs5_release`, …).
 - `-b / --flighting-branch-name` — insider branch (`Retail`, `ReleasePreview`, `Beta`, `Dev`, `CanaryChannel`).
 - `-y / --sync-current-version-only` — pin the exact current version instead of getting newer ones.
 
@@ -107,16 +107,26 @@ Optionally, an Insider (MSA) authorization token can be obtained with `-m`/`-p` 
 
 ### 3.3 Enumerating available builds
 
-`UUPDownload get-builds` iterates a hard-coded set of CTACs (one per ring, `RingCheck.cs:36-51`) and prints the newest build offered for each ring. The presets cover Windows 10 1709 (RS3) through current dev/canary builds, so you can confirm that **old builds are still being served**:
+`UUPDownload get-builds` iterates a hard-coded set of CTACs (one per ring/branch, `RingCheck.cs`) and prints the newest build offered for each one. The presets cover the still-served Windows 10 retail sets (1709 through 22H2) and the current Windows 11 retail/insider channels, so you can confirm what is currently being served:
 
 ```
-"Retail (RS3)"[0]="10.0.16299.15 (rs3_release.170928-1534)"
-"Retail (RS4)"[0]="10.0.17134.1 (rs4_release.180410-1804)"
-"Retail (RS5)"[0]="10.0.17763.1217 (rs5_release_svc_prod1.200505-1609)"
-"Retail (TI)"[0]="10.0.18362.836 (19h1_release_svc_prod1.200505-1604)"
-"Retail"[0]="10.0.19045.6456 (vb_release_svc_prod1.251010-0328)"
+"Retail (1709 - RS3)"[0]="10.0.16299.15 (rs3_release.170928-1534)"
+"Retail (1803 - RS4)"[0]="10.0.17134.1 (rs4_release.180410-1804)"
+"Retail (1809 - RS5)"[0]="10.0.17763.1217 (rs5_release_svc_prod1.200505-1609)"
+"Retail (1903 - 19H1)"[0]="10.0.18362.836 (19h1_release_svc_prod1.200505-1604)"
+"Retail (Windows 10 - VB)"[0]="10.0.19045.6456 (vb_release_svc_prod1.251010-0328)"
+"Retail (Windows 11 - GE)"[0]="10.0.26200.9457 (ge_release_svc_im.260912-0409)"
+"Beta (Windows 11)"[0]="10.0.26220.9606 (ge_release_svc_betaflt_prod1.260929-1929)"
+"Release Preview (Windows 11)"[0]="10.0.26100.9550 (ge_release_svc_prod3.260919-2247)"
 "Dev"[0]="10.0.26340.9616 (ge_prerelease_im.260929-2016)"
+"Canary"[0]="10.0.28020.2207 (br_release_svc_betaflt_prod1.260526-1854)"
 ```
+
+Notes:
+
+- **Windows 10 1703 (RS2, `rs2_release` / 15063) and older are no longer served** by the update servers. The oldest retail UUP set still available is **1709 (RS3)**; 1607, 1511 and 1507 are gone. The `get-builds` presets were corrected accordingly (the old, misleading "Insider Slow/Fast (RS2)" entries reported a 15063 device but the servers answered with a much newer build).
+- Windows 11 **Beta** and **Release Preview** now live on the **GE (Germanium)** branch → use `-c ge_release`. **Dev**/**Canary** use `-c rs_prerelease`. The legacy `ni_release` branch (21H2/22H2/23H2) no longer returns content on those channels, so `-b Beta -c ni_release -y` yields *"No updates found"*.
+- `get-builds` queries each ring in sequence; the servers occasionally answer with an empty set when many rings are queried in quick succession, so the tool waits and **retries once** before reporting nothing (`RingCheck.cs`).
 
 ### 3.4 Downloading a file set
 
@@ -176,7 +186,7 @@ UUPDownload request-download (default)
   -v, --reporting-version    OS version to claim. e.g. 10.0.19041.200          [required]
   -t, --machine-type         Architecture (MachineType). e.g. amd64            [required]
   -r, --flight-ring          Ring. e.g. Retail / External / Internal           [required]
-  -c, --current-branch       Branch. e.g. vb_release / ni_release              [required]
+  -c, --current-branch       Branch. e.g. vb_release / ge_release / rs_prerelease  [required]
   -b, --flighting-branch-name  Retail | ReleasePreview | Beta | Dev | CanaryChannel
   -y, --sync-current-version-only  pin exact current version
   -a, --branch-readiness-level     (default CB)

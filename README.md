@@ -123,25 +123,30 @@ UUPDownload might be a little too complicated to use for some people. For refere
 
 | Channel                               | Command |
 |---------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Retail (Desktop)                      | -s Professional -v 10.0.19043.1 -r Retail -b Retail -c vb_release -t [your architecture] |
+| Retail (Windows 10, Desktop)          | -s Professional -v 10.0.19043.1 -r Retail -b Retail -c vb_release -t [your architecture] |
+| Retail (Windows 11, Desktop)          | -s Professional -v 10.0.26100.1 -r Retail -b Retail -c ge_release -t [your architecture] |
 | Retail (IoT)                          | -s IoTUAP -v 10.0.17763.1 -r Retail -b Retail -c rs5_release -t [your architecture] |
 | Retail (Holographic)                  | -s Holographic -v 10.0.20346.1 -r Retail -b Retail -c fe_release -t [your architecture] |
 | Retail (Mobile)                       | -s MobileCore -v 10.0.15254.1 -r Retail -b Retail -c feature2 -t [your architecture] |
 | Retail (Team)                         | -s PPIPro -v 10.0.19043.1 -r Retail -b Retail -c vb_release -t [your architecture] |
 | Retail (Server)                       | -s DatacenterServer -v 10.0.20348.1 -r Retail -b Retail -c fe_release -t [your architecture] |
 | Release Preview (Windows 10, Desktop) | -s Professional -v 10.0.19043.1 -r External -b ReleasePreview -c vb_release -t [your architecture] |
-| Release Preview (Windows 11, Desktop) | -s Professional -v 10.0.22621.1 -r External -b ReleasePreview -c ni_release -t [your architecture] |
+| Release Preview (Windows 11, Desktop) | -s Professional -v 10.0.26100.1 -r External -b ReleasePreview -c ge_release -t [your architecture] |
 | Release Preview (HCI)                 | -s AzureStackHCIServerCore -v 10.0.22000.1 -r External -b ReleasePreview -c rs_prerelease -t [your architecture] |
 | Beta (Windows 10, Desktop)            | -s Professional -v 10.0.19043.1 -r External -b Beta -c vb_release -t [your architecture] |
-| Beta (Windows 11, Desktop)            | -s Professional -v 10.0.22621.1 -r External -b Beta -c ni_release -t [your architecture] |
+| Beta (Windows 11, Desktop)            | -s Professional -v 10.0.26100.1 -r External -b Beta -c ge_release -t [your architecture] |
 | Beta (Holographic)                    | -s Holographic -v 10.0.19043.1 -r External -b Beta -c vb_release -t [your architecture] |
 | Beta (Team)                           | -s PPIPro -v 10.0.19043.1 -r External -b Beta -c vb_release -t [your architecture] |
-| Dev (Desktop)                         | -s Professional -v 10.0.19043.1 -r External -b Dev -c vb_release -t [your architecture] |
+| Dev (Desktop)                         | -s Professional -v 10.0.26100.1 -r External -b Dev -c rs_prerelease -t [your architecture] |
 | Dev (Holographic)                     | -s Holographic -v 10.0.19043.1 -r External -b Dev -c vb_release -t [your architecture] |
 | Dev (Team)                            | -s PPIPro -v 10.0.19043.1 -r External -b Dev -c vb_release -t [your architecture] |
-| Canary (Desktop)                      | -s Professional -v 10.0.22621.1 -r External -b CanaryChannel -c ni_release -t [your architecture] |
+| Canary (Desktop)                      | -s Professional -v 10.0.26100.1 -r External -b CanaryChannel -c rs_prerelease -t [your architecture] |
 
-> **Downloading old Windows 10 builds:** use the matching branch and `-y` to pin the exact version, e.g. Windows 10 1809 (RS5): `-s Professional -v 10.0.17763.1217 -r Retail -b Retail -c rs5_release -y -e Professional -l en-US`. You can discover which builds are still being served with the `get-builds` verb. Older builds may or may not be offered by Microsoft servers anymore (builds that Microsoft has expired/retired will return no payloads).
+> **Windows 11 branches (2026):** Windows 11 now ships from the **GE (Germanium)** branch. Use `-c ge_release` for Windows 11 **Retail**, **Release Preview** and **Beta**; use `-c rs_prerelease` for **Dev** and **Canary**. The old `ni_release` branch (21H2/22H2/23H2) is no longer served by the Beta/Release Preview channels, so using it together with `-y` returns *"No updates found"*. This was verified against the live servers: Beta = `10.0.26220.9606 (ge_release_svc_betaflt_prod1)`, Dev = `10.0.26340.9616 (ge_prerelease_im)`, Canary = `10.0.28020.2207`.
+
+> **Downloading old Windows 10 builds:** the oldest UUP set still served by Microsoft is **Windows 10 1709 (RS3, `rs3_release`)**, then 1803 (`rs4_release`), 1809 (`rs5_release`), 1903 (`19h1_release`) and 22H2 (`vb_release`). **Windows 10 1703 (RS2, `rs2_release`) and older (1607, 1511, 1507) are no longer available** — Microsoft has retired them from the update servers. Use the `get-builds` verb to see what is currently offered and `-y` to pin an exact version, e.g. 1809: `-s Professional -v 10.0.17763.1217 -r Retail -b Retail -c rs5_release -y -e Professional -l en-US`.
+
+> **Windows Insider Preview ISOs:** the official [Microsoft Insider Preview download page](https://www.microsoft.com/software-download/windowsinsiderpreviewiso) now only offers **Windows 11** (the Windows 10 Insider ISOs were removed). To obtain Windows 10 media — including old builds — use `UUPDownload` as shown above.
 
 **TIP 1:** You can append ```-e [Edition to download]``` to get the files needed only for a specific edition
 

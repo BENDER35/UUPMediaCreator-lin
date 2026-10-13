@@ -75,7 +75,7 @@ El descargador nunca pregunta a Microsoft "dame el Windows X". En su lugar se ha
 - `-v / --reporting-version` — la versión de SO que se afirma tener (`10.0.x.y`).
 - `-t / --machine-type` — la arquitectura (enum `MachineType`: `x86`, `amd64`, `arm64`, …).
 - `-r / --flight-ring` — anillo de servicio (`Retail`, `External`, `Internal`, …).
-- `-c / --current-branch` — rama de lanzamiento (`vb_release`, `ni_release`, `rs5_release`, …).
+- `-c / --current-branch` — rama de lanzamiento (`vb_release`, `ge_release`, `ni_release`, `rs_prerelease`, `rs5_release`, …).
 - `-b / --flighting-branch-name` — rama insider (`Retail`, `ReleasePreview`, `Beta`, `Dev`, `CanaryChannel`).
 - `-y / --sync-current-version-only` — fijar la versión actual exacta en lugar de obtener las más nuevas.
 
@@ -107,16 +107,26 @@ Opcionalmente se puede obtener un token de autorización Insider (MSA) con `-m`/
 
 ### 3.3 Enumerar compilaciones disponibles
 
-`UUPDownload get-builds` recorre un conjunto fijo de CTAC (uno por anillo, `RingCheck.cs:36-51`) e imprime la compilación más nueva que ofrece cada anillo. Estos presets cubren desde Windows 10 1709 (RS3) hasta las compilaciones dev/canary actuales, por lo que puedes confirmar que **las versiones antiguas siguen sirviéndose**:
+`UUPDownload get-builds` recorre un conjunto fijo de CTAC (uno por anillo/rama, `RingCheck.cs`) e imprime la compilación más nueva que ofrece cada uno. Los presets cubren los conjuntos retail de Windows 10 que aún se sirven (1709 a 22H2) y los canales retail/insider actuales de Windows 11, para que puedas confirmar qué se está sirviendo:
 
 ```
-"Retail (RS3)"[0]="10.0.16299.15 (rs3_release.170928-1534)"
-"Retail (RS4)"[0]="10.0.17134.1 (rs4_release.180410-1804)"
-"Retail (RS5)"[0]="10.0.17763.1217 (rs5_release_svc_prod1.200505-1609)"
-"Retail (TI)"[0]="10.0.18362.836 (19h1_release_svc_prod1.200505-1604)"
-"Retail"[0]="10.0.19045.6456 (vb_release_svc_prod1.251010-0328)"
+"Retail (1709 - RS3)"[0]="10.0.16299.15 (rs3_release.170928-1534)"
+"Retail (1803 - RS4)"[0]="10.0.17134.1 (rs4_release.180410-1804)"
+"Retail (1809 - RS5)"[0]="10.0.17763.1217 (rs5_release_svc_prod1.200505-1609)"
+"Retail (1903 - 19H1)"[0]="10.0.18362.836 (19h1_release_svc_prod1.200505-1604)"
+"Retail (Windows 10 - VB)"[0]="10.0.19045.6456 (vb_release_svc_prod1.251010-0328)"
+"Retail (Windows 11 - GE)"[0]="10.0.26200.9457 (ge_release_svc_im.260912-0409)"
+"Beta (Windows 11)"[0]="10.0.26220.9606 (ge_release_svc_betaflt_prod1.260929-1929)"
+"Release Preview (Windows 11)"[0]="10.0.26100.9550 (ge_release_svc_prod3.260919-2247)"
 "Dev"[0]="10.0.26340.9616 (ge_prerelease_im.260929-2016)"
+"Canary"[0]="10.0.28020.2207 (br_release_svc_betaflt_prod1.260526-1854)"
 ```
+
+Notas:
+
+- **Windows 10 1703 (RS2, `rs2_release` / 15063) y anteriores ya no se sirven** por los servidores de actualización. El conjunto retail más antiguo que sigue disponible es **1709 (RS3)**; 1607, 1511 y 1507 ya no están. Los presets de `get-builds` se corrigieron en consecuencia (las antiguas entradas engañosas "Insider Slow/Fast (RS2)" reportaban un dispositivo 15063 pero los servidores respondían con una compilación mucho más nueva).
+- El **Beta** y el **Release Preview** de Windows 11 ahora están en la rama **GE (Germanium)** → usa `-c ge_release`. **Dev**/**Canary** usan `-c rs_prerelease`. La antigua rama `ni_release` (21H2/22H2/23H2) ya no devuelve contenido en esos canales, por lo que `-b Beta -c ni_release -y` da *"No updates found"*.
+- `get-builds` consulta cada anillo en secuencia; los servidores a veces responden con un conjunto vacío cuando se consultan muchos anillos muy seguidos, por lo que la herramienta espera y **reintenta una vez** antes de informar de que no hay nada (`RingCheck.cs`).
 
 ### 3.4 Descargar un conjunto de archivos
 
@@ -176,7 +186,7 @@ UUPDownload request-download (predeterminado)
   -v, --reporting-version    Versión de SO a afirmar. p. ej. 10.0.19041.200  [obligatorio]
   -t, --machine-type         Arquitectura (MachineType). p. ej. amd64        [obligatorio]
   -r, --flight-ring          Anillo. p. ej. Retail / External / Internal     [obligatorio]
-  -c, --current-branch       Rama. p. ej. vb_release / ni_release            [obligatorio]
+  -c, --current-branch       Rama. p. ej. vb_release / ge_release / rs_prerelease   [obligatorio]
   -b, --flighting-branch-name  Retail | ReleasePreview | Beta | Dev | CanaryChannel
   -y, --sync-current-version-only  fijar la versión actual exacta
   -a, --branch-readiness-level     (por defecto CB)
