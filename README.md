@@ -133,7 +133,7 @@ UUPDownload might be a little too complicated to use for some people. For refere
 | Release Preview (Windows 10, Desktop) | -s Professional -v 10.0.19043.1 -r External -b ReleasePreview -c vb_release -t [your architecture] |
 | Release Preview (Windows 11, Desktop) | -s Professional -v 10.0.26100.1 -r External -b ReleasePreview -c ge_release -t [your architecture] |
 | Release Preview (HCI)                 | -s AzureStackHCIServerCore -v 10.0.22000.1 -r External -b ReleasePreview -c rs_prerelease -t [your architecture] |
-| Beta (Windows 10, Desktop)            | -s Professional -v 10.0.19043.1 -r External -b Beta -c vb_release -t [your architecture] |
+| Beta (Windows 10, Desktop)            | -s Professional -v 10.0.19045.1 -r External -b Beta -c vb_release -t [your architecture] |
 | Beta (Windows 11, Desktop)            | -s Professional -v 10.0.26100.1 -r External -b Beta -c ge_release -t [your architecture] |
 | Beta (Holographic)                    | -s Holographic -v 10.0.19043.1 -r External -b Beta -c vb_release -t [your architecture] |
 | Beta (Team)                           | -s PPIPro -v 10.0.19043.1 -r External -b Beta -c vb_release -t [your architecture] |
@@ -143,6 +143,10 @@ UUPDownload might be a little too complicated to use for some people. For refere
 | Canary (Desktop)                      | -s Professional -v 10.0.26100.1 -r External -b CanaryChannel -c rs_prerelease -t [your architecture] |
 
 > **Windows 11 branches (2026):** Windows 11 now ships from the **GE (Germanium)** branch. Use `-c ge_release` for Windows 11 **Retail**, **Release Preview** and **Beta**; use `-c rs_prerelease` for **Dev** and **Canary**. The old `ni_release` branch (21H2/22H2/23H2) is no longer served by the Beta/Release Preview channels, so using it together with `-y` returns *"No updates found"*. This was verified against the live servers: Beta = `10.0.26220.9606 (ge_release_svc_betaflt_prod1)`, Dev = `10.0.26340.9616 (ge_prerelease_im)`, Canary = `10.0.28020.2207`.
+
+> **Windows 10 Beta:** Microsoft still serves the Windows 10 **Beta** channel — it answers with the newest Windows 10 22H2 build (`10.0.19045.6396`, `vb_release_svc_prod3.250923-1751`). Use `-s Professional -v 10.0.19045.1 -r External -b Beta -c vb_release -t [your architecture]` **without `-y`** to always fetch the latest available Beta build. Windows 10 **Dev** now returns Windows 11 builds instead.
+
+> **Reliability:** the Windows Update servers occasionally answer with an empty set when many requests are fired in quick succession. `UUPDownload` now waits and **retries once** before reporting *"No updates found"*, for both `get-builds` and `request-download`.
 
 > **Downloading old Windows 10 builds:** the oldest UUP set still served by Microsoft is **Windows 10 1709 (RS3, `rs3_release`)**, then 1803 (`rs4_release`), 1809 (`rs5_release`), 1903 (`19h1_release`) and 22H2 (`vb_release`). **Windows 10 1703 (RS2, `rs2_release`) and older (1607, 1511, 1507) are no longer available** — Microsoft has retired them from the update servers. Use the `get-builds` verb to see what is currently offered and `-y` to pin an exact version, e.g. 1809: `-s Professional -v 10.0.17763.1217 -r Retail -b Retail -c rs5_release -y -e Professional -l en-US`.
 

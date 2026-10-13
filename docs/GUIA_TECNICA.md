@@ -120,6 +120,7 @@ Opcionalmente se puede obtener un token de autorización Insider (MSA) con `-m`/
 "Release Preview (Windows 11)"[0]="10.0.26100.9550 (ge_release_svc_prod3.260919-2247)"
 "Dev"[0]="10.0.26340.9616 (ge_prerelease_im.260929-2016)"
 "Canary"[0]="10.0.28020.2207 (br_release_svc_betaflt_prod1.260526-1854)"
+"Beta (Windows 10)"[0]="10.0.19045.6396 (vb_release_svc_prod3.250923-1751)"
 ```
 
 Notas:
@@ -127,6 +128,7 @@ Notas:
 - **Windows 10 1703 (RS2, `rs2_release` / 15063) y anteriores ya no se sirven** por los servidores de actualización. El conjunto retail más antiguo que sigue disponible es **1709 (RS3)**; 1607, 1511 y 1507 ya no están. Los presets de `get-builds` se corrigieron en consecuencia (las antiguas entradas engañosas "Insider Slow/Fast (RS2)" reportaban un dispositivo 15063 pero los servidores respondían con una compilación mucho más nueva).
 - El **Beta** y el **Release Preview** de Windows 11 ahora están en la rama **GE (Germanium)** → usa `-c ge_release`. **Dev**/**Canary** usan `-c rs_prerelease`. La antigua rama `ni_release` (21H2/22H2/23H2) ya no devuelve contenido en esos canales, por lo que `-b Beta -c ni_release -y` da *"No updates found"*.
 - `get-builds` consulta cada anillo en secuencia; los servidores a veces responden con un conjunto vacío cuando se consultan muchos anillos muy seguidos, por lo que la herramienta espera y **reintenta una vez** antes de informar de que no hay nada (`RingCheck.cs`).
+- La **Beta de Windows 10** sigue sirviéndose: el canal Beta responde con la compilación más nueva de Windows 10 22H2 (`10.0.19045.6396`, `vb_release_svc_prod3`). Consúltala con `-v 10.0.19045.1 -b Beta -c vb_release` y **sin** `-y`, p. ej. `-s Professional -v 10.0.19045.1 -r External -b Beta -c vb_release -t amd64`. El canal **Dev** de Windows 10 ahora devuelve compilaciones de Windows 11 (verificado: `10.0.26340.9616`).
 
 ### 3.4 Descargar un conjunto de archivos
 

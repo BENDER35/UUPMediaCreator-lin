@@ -120,6 +120,7 @@ Optionally, an Insider (MSA) authorization token can be obtained with `-m`/`-p` 
 "Release Preview (Windows 11)"[0]="10.0.26100.9550 (ge_release_svc_prod3.260919-2247)"
 "Dev"[0]="10.0.26340.9616 (ge_prerelease_im.260929-2016)"
 "Canary"[0]="10.0.28020.2207 (br_release_svc_betaflt_prod1.260526-1854)"
+"Beta (Windows 10)"[0]="10.0.19045.6396 (vb_release_svc_prod3.250923-1751)"
 ```
 
 Notes:
@@ -127,6 +128,7 @@ Notes:
 - **Windows 10 1703 (RS2, `rs2_release` / 15063) and older are no longer served** by the update servers. The oldest retail UUP set still available is **1709 (RS3)**; 1607, 1511 and 1507 are gone. The `get-builds` presets were corrected accordingly (the old, misleading "Insider Slow/Fast (RS2)" entries reported a 15063 device but the servers answered with a much newer build).
 - Windows 11 **Beta** and **Release Preview** now live on the **GE (Germanium)** branch → use `-c ge_release`. **Dev**/**Canary** use `-c rs_prerelease`. The legacy `ni_release` branch (21H2/22H2/23H2) no longer returns content on those channels, so `-b Beta -c ni_release -y` yields *"No updates found"*.
 - `get-builds` queries each ring in sequence; the servers occasionally answer with an empty set when many rings are queried in quick succession, so the tool waits and **retries once** before reporting nothing (`RingCheck.cs`).
+- **Windows 10 Beta** is still served: the Beta channel answers with the newest Windows 10 22H2 build (`10.0.19045.6396`, `vb_release_svc_prod3`). Query it with `-v 10.0.19045.1 -b Beta -c vb_release` and **no** `-y`, e.g. `-s Professional -v 10.0.19045.1 -r External -b Beta -c vb_release -t amd64`. Windows 10 **Dev** now returns Windows 11 builds instead (verified: `10.0.26340.9616`).
 
 ### 3.4 Downloading a file set
 

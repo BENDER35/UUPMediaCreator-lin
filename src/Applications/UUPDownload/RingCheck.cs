@@ -57,6 +57,9 @@ namespace UUPDownload
                 { new CTAC(osSkuId, "10.0.26100.1", machineType, "External", "Dev", "CB", "rs_prerelease", "Production", false, false), "Dev" },
                 { new CTAC(osSkuId, "10.0.26100.1", machineType, "External", "CanaryChannel", "CB", "rs_prerelease", "Production", false, false), "Canary" },
 
+                // --- Windows 10 Beta: still served, answers with the latest 22H2 build ---
+                { new CTAC(osSkuId, "10.0.19045.1", machineType, "External", "Beta", "CB", "vb_release", "Production", false, false), "Beta (Windows 10)" },
+
                 // --- Legacy Windows 10 insider rings (kept for completeness) ---
                 { new CTAC(osSkuId, "10.0.19041.200", machineType, "RP", "External", "CB", "vb_release", "Production", false, false), "Insider Release Preview" },
                 { new CTAC(osSkuId, "10.0.19041.200", machineType, "WIS", "External", "CB", "vb_release", "Production", false, false), "Insider Slow" },

@@ -193,6 +193,17 @@ namespace UUPDownload.DownloadRequest
 
             if (!data.Any())
             {
+                // The Windows Update servers occasionally answer with an empty set
+                // when several requests are made in quick succession (rate limiting).
+                // Retry once before reporting "nothing", so a valid request does not
+                // spuriously fail to download the newest build of a channel.
+                Logging.Log("No updates were returned, retrying once...");
+                await Task.Delay(1500);
+                data = await FE3Handler.GetUpdates(null, ctac, token, FileExchangeV3UpdateFilter.ProductRelease);
+            }
+
+            if (!data.Any())
+            {
                 Logging.Log("No updates found that matched the specified criteria.", Logging.LoggingLevel.Error);
             }
             else
