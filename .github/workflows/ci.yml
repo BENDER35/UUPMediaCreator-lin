@@ -7,34 +7,56 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
-        target: [win-x86,win-x64,win-arm64,linux-x64,linux-arm64,osx-x64,osx-arm64]
         include:
-          - target: win-x86
-            platform: win
-            architecture: x86
-          - target: win-x64
-            platform: win
-            architecture: x64
-          - target: win-arm64
-            platform: win
-            architecture: arm64
-          - target: linux-x64
-            platform: linux
-            architecture: x64
-          - target: linux-arm64
-            platform: linux
-            architecture: arm64
-          - target: osx-x64
-            platform: osx
-            architecture: x64
-          - target: osx-arm64
-            platform: osx
-            architecture: arm64
+          # .NET 10 — Windows 10 1607+ / Windows 11
+          - name: win-x64
+            rid: win-x64
+            tfm: net10.0
+            langversion: ""
+          - name: win-x86
+            rid: win-x86
+            tfm: net10.0
+            langversion: ""
+          - name: win-arm64
+            rid: win-arm64
+            tfm: net10.0
+            langversion: ""
+          # .NET 6 — legacy, Windows 7 SP1 / 8 / 8.1
+          - name: win-legacy-x64
+            rid: win-x64
+            tfm: net6.0
+            langversion: latest
+          - name: win-legacy-x86
+            rid: win-x86
+            tfm: net6.0
+            langversion: latest
+          # Linux / macOS
+          - name: linux-x64
+            rid: linux-x64
+            tfm: net10.0
+            langversion: ""
+          - name: linux-arm64
+            rid: linux-arm64
+            tfm: net10.0
+            langversion: ""
+          - name: osx-x64
+            rid: osx-x64
+            tfm: net10.0
+            langversion: ""
+          - name: osx-arm64
+            rid: osx-arm64
+            tfm: net10.0
+            langversion: ""
+    name: ${{ matrix.name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4.2.2
@@ -42,34 +64,56 @@ jobs:
       - name: Install .NET SDK
         uses: actions/setup-dotnet@v4.1.0
         with:
-          dotnet-version: "7.0.x"
-
-      - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v2.0.0
+          dotnet-version: "10.0.x"
 
       - name: Build CLI utilities
         shell: pwsh
         run: |
-          msbuild /m /t:restore,cli\uupmediaconverter:publish,cli\uupdownload:publish /p:Platform=${{ matrix.architecture }} /p:RuntimeIdentifier=${{ matrix.platform }}-${{ matrix.architecture }} /p:PublishDir=${{ github.workspace }}/artifacts/${{ matrix.platform }}-${{ matrix.architecture }}/CLIs /p:PublishSingleFile=true /p:PublishTrimmed=false /p:Configuration=Release UUPMediaCreator.sln
+          $projects = @(
+            'src/Applications/UUPDownload/UUPDownload.csproj',
+            'src/Applications/UUPMediaConverter/UUPMediaConverter.csproj'
+          )
+          $publishDir = '${{ github.workspace }}/artifacts/${{ matrix.name }}/CLIs/'
+          $common = @(
+            '/t:restore;publish',
+            '/p:Configuration=Release',
+            '/p:RuntimeIdentifier=${{ matrix.rid }}',
+            '/p:UUPMediaTargetFramework=${{ matrix.tfm }}',
+            '/p:SelfContained=true',
+            '/p:PublishSingleFile=true',
+            '/p:PublishTrimmed=false',
+            "/p:PublishDir=$publishDir"
+          )
+          # net6.0 needs LangVersion=latest: a few files use language features
+          # newer than the C# 10 default of that target framework.
+          if ('${{ matrix.langversion }}' -ne '') {
+            $common += '/p:LangVersion=${{ matrix.langversion }}'
+          }
+          foreach ($project in $projects) {
+            Write-Host "==> Publishing $project for ${{ matrix.name }}"
+            dotnet msbuild $project @common
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
 
       - name: Create PDB Output Directory
         shell: pwsh
         run: |
-          mkdir ${{ github.workspace }}\artifacts\${{ matrix.platform }}-${{ matrix.architecture }}\PDBs
+          New-Item -ItemType Directory -Force -Path "${{ github.workspace }}/artifacts/${{ matrix.name }}/PDBs" | Out-Null
 
       - name: Move PDBs
         shell: pwsh
         run: |
-          move ${{ github.workspace }}\artifacts\${{ matrix.platform }}-${{ matrix.architecture }}\CLIs\*.pdb ${{ github.workspace }}\artifacts\${{ matrix.platform }}-${{ matrix.architecture }}\PDBs\
+          Get-ChildItem "${{ github.workspace }}/artifacts/${{ matrix.name }}/CLIs/*.pdb" -ErrorAction SilentlyContinue |
+            Move-Item -Destination "${{ github.workspace }}/artifacts/${{ matrix.name }}/PDBs/"
 
       - name: Upload artifact (Binaries)
         uses: actions/upload-artifact@v4.4.3
         with:
-          name: ${{ matrix.platform }}-${{ matrix.architecture }}-binaries
-          path: ${{ github.workspace }}/artifacts/${{ matrix.platform }}-${{ matrix.architecture }}\CLIs
+          name: ${{ matrix.name }}-binaries
+          path: ${{ github.workspace }}/artifacts/${{ matrix.name }}/CLIs
 
       - name: Upload artifact (Symbols)
         uses: actions/upload-artifact@v4.4.3
         with:
-          name: ${{ matrix.platform }}-${{ matrix.architecture }}-symbols
-          path: ${{ github.workspace }}/artifacts/${{ matrix.platform }}-${{ matrix.architecture }}\PDBs
+          name: ${{ matrix.name }}-symbols
+          path: ${{ github.workspace }}/artifacts/${{ matrix.name }}/PDBs
