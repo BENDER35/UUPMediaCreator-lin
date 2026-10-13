@@ -67,6 +67,30 @@ Se proporciona un script de conveniencia:
 
 Publica tanto `UUPDownload` como `UUPMediaConverter` como ejecutables de archivo único en `publish/artifacts/linux-<arch>/CLI`.
 
+### Publicar para Windows
+
+En Windows se proporciona un script `.cmd` por arquitectura. Requieren el **SDK de .NET 10** / MSBuild:
+
+| Script | Arquitectura | Destino habitual |
+|--------|--------------|------------------|
+| `publish_win_x64.cmd` | 64 bits | Windows 10 1607+ / Windows 11 |
+| `publish_win_x86.cmd` | 32 bits | Windows 10 1607+ |
+| `publish_win_arm64.cmd` | ARM64 | Windows 11 |
+| `publish_win_legacy.cmd` | 32 bits **y** 64 bits | **Windows 7 SP1 / 8 / 8.1** y posteriores |
+
+Cada script genera ejecutables de archivo único autocontenidos:
+
+- `publish_win_x64.cmd`, `publish_win_x86.cmd` y `publish_win_arm64.cmd` → `publish\artifacts\win-<arch>\CLI`
+- `publish_win_legacy.cmd` → `publish\artifacts\win-legacy-x86\CLI` y `publish\artifacts\win-legacy-x64\CLI`
+
+#### Compilación heredada (Windows antiguo)
+
+La compilación predeterminada usa **.NET 10**, que **solo funciona en Windows 10 1607 o posterior**. Para ejecutarla en **Windows 7 SP1, 8 u 8.1**, `publish_win_legacy.cmd` usa **.NET 6** (el último runtime de .NET que funciona en Windows 7 SP1) y genera ejecutables autocontenidos, por lo que **no hace falta instalar ningún runtime de .NET en la máquina de destino**.
+
+La máquina de destino sigue necesitando los requisitos habituales de Windows 7: el Universal C Runtime (**KB2999226**), el soporte de firma de código SHA-2 (**KB4474419**) y **KB2533623**.
+
+> **Nota:** .NET 6 ya no tiene soporte (sus correcciones de seguridad finalizaron en noviembre de 2024). La compilación heredada existe únicamente para poder ejecutar la herramienta en sistemas operativos que .NET 10 ya no admite; siempre que sea posible, usa la compilación predeterminada (.NET 10).
+
 ## Ciclo de vida de soporte de Windows 10
 
 Esta herramienta puede descargar y crear medios para **Windows 10 y Windows 11**, incluidas versiones antiguas de Windows 10 (1709, 1803, 1809, 1903...). Por ello, debes conocer el estado actual de soporte de los sistemas operativos que vayas a desplegar:

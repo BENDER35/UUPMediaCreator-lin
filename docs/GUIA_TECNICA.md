@@ -248,6 +248,37 @@ dotnet build src/Applications/UUPMediaConverter/UUPMediaConverter.csproj -c Rele
 
 El `.sln` completo incluye proyectos solo Windows (`UUPSort`, `Playground`, `Windows.Internal.Flighting`) que apuntan a `net10.0-windows`; compila los dos proyectos CLI por separado (como arriba) o mediante la matriz del CI, que publica los CLIs para los RIDs `win-*`, `linux-*` y `osx-*`.
 
+### 6.1 Scripts de publicación para Windows
+
+En Windows, un script `.cmd` por arquitectura (requiere el SDK de .NET 10 / MSBuild):
+
+| Script | Arquitectura | Salida |
+|--------|--------------|--------|
+| `publish_win_x64.cmd` | x64 | `publish\artifacts\win-x64\CLI` |
+| `publish_win_x86.cmd` | x86 (32 bits) | `publish\artifacts\win-x86\CLI` |
+| `publish_win_arm64.cmd` | ARM64 | `publish\artifacts\win-arm64\CLI` |
+| `publish_win_legacy.cmd` | x86 + x64 | `publish\artifacts\win-legacy-{x86,x64}\CLI` |
+
+El framework de destino se selecciona mediante la propiedad `UUPMediaTargetFramework`, definida en el `Directory.Build.props` de la raíz del repositorio y con valor predeterminado `net10.0`. Todos los proyectos que forman parte de los CLIs usan `<TargetFramework>$(UUPMediaTargetFramework)</TargetFramework>`, por lo que la compilación predeterminada no cambia.
+
+El script **heredado** la sobrescribe con **`net6.0`**, el último runtime de .NET que funciona en **Windows 7 SP1 / 8 / 8.1** (el `net10.0` predeterminado requiere Windows 10 1607+). También pasa `/p:LangVersion=latest` porque algunos archivos usan características del lenguaje más recientes que el valor predeterminado de C# 10 en `net6.0`. Los binarios publicados son ejecutables de archivo único autocontenidos, por lo que no se necesita ningún runtime de .NET en el destino:
+
+```cmd
+msbuild /m /t:restore,cli\uupmediaconverter:publish,cli\uupdownload:publish ^
+  /p:Platform=x64 /p:RuntimeIdentifier=win-x64 ^
+  /p:UUPMediaTargetFramework=net6.0 /p:LangVersion=latest ^
+  /p:PublishDir=%CD%\publish\artifacts\win-legacy-x64\CLI ^
+  /p:PublishSingleFile=true /p:PublishTrimmed=false /p:Configuration=Release UUPMediaCreator.sln
+```
+
+Fueron necesarios pequeños ajustes de compatibilidad entre frameworks para que el código compile con `net10.0` y `net6.0`; son inocuos para la compilación predeterminada:
+
+- Conversiones `IntPtr` → `long`/`char` (`WimMessage.cs`) y `new(-1)` (`NativeMethods.cs`), porque `IntPtr` solo ganó conversiones numéricas implícitas en .NET 7.
+- `.AsEnumerable().Reverse()` donde se llamaba a `Reverse()` directamente sobre un array (`BuildFetcher.cs`, `PathUtils.cs`, `FolderUtilities.cs`, `DesktopConvert.cs`, `WimLibImaging.cs`): en `net6.0` el array se enlaza con la sobrecarga `void MemoryExtensions.Reverse(Span<T>)`.
+- `[GeneratedRegex]` está envuelto en `#if NET7_0_OR_GREATER`, con un `Regex` compilado como alternativa para `net6.0` (`DownloadHelpers.cs`).
+
+> **Nota:** .NET 6 dejó de recibir soporte en noviembre de 2024. La variante heredada existe únicamente para ejecutar la herramienta en sistemas operativos que .NET 10 ya no admite (Windows 7 SP1 / 8 / 8.1). Además, Windows 7 SP1 requiere el Universal C Runtime (KB2999226), el soporte de firma de código SHA-2 (KB4474419) y KB2533623.
+
 ---
 
 ## 7. Plataformas admitidas
@@ -273,6 +304,8 @@ Verificado en **Linux (Ubuntu 26.04, x86_64, SDK de .NET 10.0.112)**:
 | `UUPDownload request-download` de **Windows 10 1809 (RS5)** (`rs5_release`, `-y`, `-e Professional -l en-US`) — 78 cargas útiles, conjunto multi-GB descargado, hashes verificados | ✅ |
 | `UUPMediaConverter desktop-convert` → ISO vía wimlib + mkisofs | ✅ Windows 10 1809 (RS5) → ISO de arranque de 4,2 GB (`CPRA_X64FRE_EN-US_DV9`, El-Torito no-emulation, 945 archivos / 84 carpetas) |
 | `request-download ... -c vb_release -u` (**Windows 10 ESU**, `-v 10.0.19045.1`, `-e Professional -l en-US`) — el servidor devuelve la compilación ESU `10.0.19045.7727 (vb_release_svc_im.260912-0526)` para x86, amd64 y arm64; las cargas útiles se descargan y verifican (p. ej. KB5122887) | ✅ |
+| Publicación autocontenida predeterminada `net10.0` **win-x86** (`UUPDownload`/`UUPMediaConverter`) con `dotnet publish -r win-x86` | ✅ se generan ejecutables PE32 válidos |
+| Publicación **heredada `net6.0`** (`/p:UUPMediaTargetFramework=net6.0 /p:LangVersion=latest`, el equivalente de `publish_win_legacy.cmd`) para win-x64 y win-x86, `dotnet msbuild '/t:restore;publish'` | ✅ se generan ejecutables de archivo único autocontenidos (63/59 MB); ambos CLIs compilan con 0 errores también en `net6.0` |
 
 Nota: una compilación muy antigua puede dejar de servirse por Microsoft en cualquier momento (Microsoft caduca/retira contenido de WU); la herramienta lo muestra como "no hay cargas útiles disponibles", no como un error de la herramienta.
 
@@ -290,6 +323,8 @@ Nota: una compilación muy antigua puede dejar de servirse por Microsoft en cual
 | `PlatformNotSupportedException` de `WimLibImaging` | Falta `libwim.so` de tu arquitectura en la salida. |
 | Errores de `virtdisk.dll`/`DISM` en Linux | Pediste una conversión de varias ediciones/upgrade. No está soportada en Linux; usa una edición base única (`-e`). |
 | El build del `.sln` completo falla en Linux | Esperado: `UUPSort`/`Playground`/`Flighting` son solo Windows. Compila los dos proyectos CLI. |
+| La compilación heredada (`publish_win_legacy.cmd`) referencia `net10.0` | Asegúrate de que exista `Directory.Build.props` y de pasar `/p:UUPMediaTargetFramework=net6.0`; la propiedad debe llegar a los proyectos referenciados (no sobrescribas `TargetFramework` directamente, ya que no se propaga a las referencias de proyecto). |
+| La app compilada con el script predeterminado no arranca en Windows 7 / 8.1 | La compilación predeterminada usa .NET 10 (Windows 10 1607+). Usa `publish_win_legacy.cmd` e instala los requisitos de Windows 7 (KB2999226, KB4474419, KB2533623). |
 | No hay cargas útiles para una compilación muy antigua | Microsoft ya no sirve esa compilación; prueba una versión cercana o consulta `get-builds`. |
 
 ---

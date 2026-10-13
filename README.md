@@ -67,6 +67,30 @@ A convenience script is provided:
 
 It publishes both `UUPDownload` and `UUPMediaConverter` as single-file executables into `publish/artifacts/linux-<arch>/CLI`.
 
+### Publishing for Windows
+
+On Windows, a `.cmd` helper script is provided per architecture. They require the **.NET 10 SDK** / MSBuild:
+
+| Script | Architecture | Typical target |
+|--------|--------------|----------------|
+| `publish_win_x64.cmd` | 64-bit | Windows 10 1607+ / Windows 11 |
+| `publish_win_x86.cmd` | 32-bit | Windows 10 1607+ |
+| `publish_win_arm64.cmd` | ARM64 | Windows 11 |
+| `publish_win_legacy.cmd` | 32-bit **and** 64-bit | **Windows 7 SP1 / 8 / 8.1** and newer |
+
+Each script produces self-contained single-file executables:
+
+- `publish_win_x64.cmd`, `publish_win_x86.cmd` and `publish_win_arm64.cmd` → `publish\artifacts\win-<arch>\CLI`
+- `publish_win_legacy.cmd` → `publish\artifacts\win-legacy-x86\CLI` and `publish\artifacts\win-legacy-x64\CLI`
+
+#### Legacy build (old Windows)
+
+The default build targets **.NET 10**, which **only runs on Windows 10 1607 or later**. To run on **Windows 7 SP1, 8 or 8.1**, `publish_win_legacy.cmd` targets **.NET 6** (the last .NET runtime that runs on Windows 7 SP1) and produces self-contained executables, so **no .NET runtime has to be installed on the target machine**.
+
+The target machine still needs the usual Windows 7 prerequisites: the Universal C Runtime (**KB2999226**), SHA-2 code signing support (**KB4474419**) and **KB2533623**.
+
+> **Note:** .NET 6 is out of support upstream (its security fixes ended in November 2024). The legacy build exists only so the tool can run on operating systems that .NET 10 no longer supports; prefer the default (.NET 10) build whenever possible.
+
 ## Windows 10 support lifecycle
 
 This tool can download and build media for **both Windows 10 and Windows 11**, including very old Windows 10 builds (1709, 1803, 1809, 1903…). Because of that, you should be aware of the current support status of the operating systems you are going to deploy:

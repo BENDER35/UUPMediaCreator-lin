@@ -248,6 +248,37 @@ dotnet build src/Applications/UUPMediaConverter/UUPMediaConverter.csproj -c Rele
 
 The whole `.sln` includes Windows-only projects (`UUPSort`, `Playground`, `Windows.Internal.Flighting`) targeting `net10.0-windows`; build the two CLI projects individually (as above) or via the CI matrix, which publishes the CLIs for `win-*`, `linux-*` and `osx-*` RIDs.
 
+### 6.1 Windows publish scripts
+
+On Windows, one `.cmd` per architecture (requires the .NET 10 SDK / MSBuild):
+
+| Script | Architecture | Output |
+|--------|--------------|--------|
+| `publish_win_x64.cmd` | x64 | `publish\artifacts\win-x64\CLI` |
+| `publish_win_x86.cmd` | x86 (32-bit) | `publish\artifacts\win-x86\CLI` |
+| `publish_win_arm64.cmd` | ARM64 | `publish\artifacts\win-arm64\CLI` |
+| `publish_win_legacy.cmd` | x86 + x64 | `publish\artifacts\win-legacy-{x86,x64}\CLI` |
+
+The target framework is selected through the `UUPMediaTargetFramework` property, defined in the repository-root `Directory.Build.props` and defaulting to `net10.0`. Every project that is part of the CLIs uses `<TargetFramework>$(UUPMediaTargetFramework)</TargetFramework>`, so the default build is unchanged.
+
+The **legacy** script overrides it to **`net6.0`**, the last .NET runtime that runs on **Windows 7 SP1 / 8 / 8.1** (the default `net10.0` requires Windows 10 1607+). It also passes `/p:LangVersion=latest` because a few files use language features newer than the C# 10 default of `net6.0`. The published binaries are self-contained single-file executables, so no .NET runtime is needed on the target:
+
+```cmd
+msbuild /m /t:restore,cli\uupmediaconverter:publish,cli\uupdownload:publish ^
+  /p:Platform=x64 /p:RuntimeIdentifier=win-x64 ^
+  /p:UUPMediaTargetFramework=net6.0 /p:LangVersion=latest ^
+  /p:PublishDir=%CD%\publish\artifacts\win-legacy-x64\CLI ^
+  /p:PublishSingleFile=true /p:PublishTrimmed=false /p:Configuration=Release UUPMediaCreator.sln
+```
+
+Cross-target compatibility shims were needed so the code compiles for both `net10.0` and `net6.0`; they are no-ops for the default build:
+
+- `IntPtr` → `long`/`char` casts (`WimMessage.cs`) and `new(-1)` (`NativeMethods.cs`), because `IntPtr` only gained implicit numeric conversions in .NET 7.
+- `.AsEnumerable().Reverse()` where `Reverse()` was called directly on an array (`BuildFetcher.cs`, `PathUtils.cs`, `FolderUtilities.cs`, `DesktopConvert.cs`, `WimLibImaging.cs`): on `net6.0` the array binds to the `void MemoryExtensions.Reverse(Span<T>)` overload.
+- `[GeneratedRegex]` is wrapped in `#if NET7_0_OR_GREATER`, with a compiled `Regex` fallback for `net6.0` (`DownloadHelpers.cs`).
+
+> **Note:** .NET 6 reached end of support in November 2024. The legacy flavour exists only to run on operating systems that .NET 10 no longer supports (Windows 7 SP1 / 8 / 8.1). Windows 7 SP1 additionally requires the Universal C Runtime (KB2999226), SHA-2 code signing support (KB4474419) and KB2533623.
+
 ---
 
 ## 7. Platform support
@@ -273,6 +304,8 @@ Verified on **Linux (Ubuntu 26.04, x86_64, .NET SDK 10.0.112)**:
 | `UUPDownload request-download` of **Windows 10 1809 (RS5)** (`rs5_release`, `-y`, `-e Professional -l en-US`) — 78 payloads, multi-GB set downloaded, hashes verified | ✅ |
 | `UUPMediaConverter desktop-convert` → ISO via wimlib + mkisofs | ✅ Windows 10 1809 (RS5) → 4,2 GB bootable ISO (`CPRA_X64FRE_EN-US_DV9`, El-Torito no-emulation, 945 files / 84 dirs) |
 | `request-download ... -c vb_release -u` (**Windows 10 ESU**, `-v 10.0.19045.1`, `-e Professional -l en-US`) — server returns the ESU build `10.0.19045.7727 (vb_release_svc_im.260912-0526)` for x86, amd64 and arm64; payloads download and verify (e.g. KB5122887) | ✅ |
+| Default `net10.0` **win-x86** self-contained publish (`UUPDownload`/`UUPMediaConverter`) via `dotnet publish -r win-x86` | ✅ valid PE32 executables produced |
+| **Legacy `net6.0`** publish (`/p:UUPMediaTargetFramework=net6.0 /p:LangVersion=latest`, the equivalent of `publish_win_legacy.cmd`) for win-x64 and win-x86, `dotnet msbuild '/t:restore;publish'` | ✅ self-contained single-file executables produced (63/59 MB); both CLIs compile with 0 errors on `net6.0` too |
 
 Note: a very old build can stop being served by Microsoft at any time (Microsoft expires/retires WU content); the tool surfaces this as no available payloads, not as an error in the tool.
 
@@ -290,6 +323,8 @@ Note: a very old build can stop being served by Microsoft at any time (Microsoft
 | `PlatformNotSupportedException` from `WimLibImaging` | `libwim.so` for your architecture is missing from the output. |
 | `virtdisk.dll`/`DISM` errors on Linux | You requested a multi-edition/upgrade conversion. Not supported on Linux; use a single base edition (`-e`). |
 | Build fails on whole `.sln` in Linux | Expected: `UUPSort`/`Playground`/`Flighting` are Windows-only. Build the two CLI projects. |
+| Legacy build (`publish_win_legacy.cmd`) references `net10.0` | Ensure `Directory.Build.props` is present and `/p:UUPMediaTargetFramework=net6.0` is passed; the property must reach the referenced projects (do not override `TargetFramework` directly, as it does not propagate to project references). |
+| App built with the default script refuses to start on Windows 7 / 8.1 | The default build targets .NET 10 (Windows 10 1607+). Use `publish_win_legacy.cmd`, and install the Windows 7 prerequisites (KB2999226, KB4474419, KB2533623). |
 | No payloads returned for a very old build | Microsoft no longer serves that build; try a nearby version or check `get-builds`. |
 
 ---

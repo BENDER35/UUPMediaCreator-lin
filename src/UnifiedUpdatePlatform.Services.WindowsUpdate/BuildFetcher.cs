@@ -193,7 +193,7 @@ namespace UnifiedUpdatePlatform.Services.WindowsUpdate
 
             foreach (string file in potentialFiles)
             {
-                string edition = file.Split('_').Reverse().Skip(1).First();
+                string edition = file.Split('_').AsEnumerable().Reverse().Skip(1).First();
 
                 if (availableEditions.Any(x => x.Edition == edition))
                 {
@@ -252,7 +252,7 @@ namespace UnifiedUpdatePlatform.Services.WindowsUpdate
 
                             foreach (string file in potentialFiles)
                             {
-                                string edition = file.Split('_').Reverse().Skip(1).First();
+                                string edition = file.Split('_').AsEnumerable().Reverse().Skip(1).First();
 
                                 if (availableEditions.Any(x => x.Edition == edition))
                                 {
