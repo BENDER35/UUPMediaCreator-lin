@@ -20,8 +20,11 @@ and this project adheres to a `major.minor.patch.build` version scheme.
 
 ### Changed
 - CI (`.github/workflows/ci.yml`) built on .NET 10, with native runners per
-  platform, NuGet caching, a pinned SDK, action pinning by commit SHA and an
-  optional tag-driven release job.
+  platform, NuGet caching, a pinned SDK, action pinning by commit SHA, a job
+  for the Windows-only tools (`UUPSort`) and an optional tag-driven release
+  job. `Playground` and `Windows.Internal.Flighting` are not built in CI
+  because they need the Windows 10 SDK UAP platform that GitHub-hosted
+  runners do not provide.
 - All Windows `.cmd` scripts now `pushd` to their own directory, quote paths
   (so they survive spaces in the path) and abort on the first error.
 - `.gitattributes` forces CRLF line endings for `*.cmd` / `*.bat`.

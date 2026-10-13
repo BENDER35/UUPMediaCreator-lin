@@ -246,7 +246,7 @@ dotnet build src/Applications/UUPMediaConverter/UUPMediaConverter.csproj -c Rele
 ./publish_linux.sh arm64      # linux-arm64
 ```
 
-The whole `.sln` includes Windows-only projects (`UUPSort`, `Playground`, `Windows.Internal.Flighting`) targeting `net10.0-windows`; build the two CLI projects individually (as above) or via the CI matrix (`.github/workflows/ci.yml`, .NET 10 SDK), which publishes the CLIs for every `win-*`/`linux-*`/`osx-*` RID and also builds the legacy (`net6.0`) `win-legacy-x86`/`win-legacy-x64` variants.
+The whole `.sln` includes Windows-only projects (`UUPSort`, `Playground`, `Windows.Internal.Flighting`) targeting `net10.0-windows`; build the two CLI projects individually (as above) or via the CI matrix (`.github/workflows/ci.yml`, .NET 10 SDK), which publishes the CLIs for every `win-*`/`linux-*`/`osx-*` RID, builds the legacy (`net6.0`) `win-legacy-x86`/`win-legacy-x64` variants and builds the Windows-only `UUPSort` tool. (`Playground` and `Windows.Internal.Flighting` are not built in CI: they need the Windows 10 SDK UAP platform, which GitHub-hosted runners do not provide.)
 
 ### 6.1 Windows publish scripts
 
